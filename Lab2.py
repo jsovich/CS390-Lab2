@@ -19,8 +19,8 @@ tf.compat.v1.disable_eager_execution()
 tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR)
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-CONTENT_IMG_PATH = "content.jpg"
-STYLE_IMG_PATH = "style.jpg"
+CONTENT_IMG_PATH = "Content/NYC.jpg"
+STYLE_IMG_PATH = "Style/Wave.jpeg"
 
 CONTENT_IMG_H = 500
 CONTENT_IMG_W = 500
@@ -28,11 +28,11 @@ CONTENT_IMG_W = 500
 STYLE_IMG_H = 500
 STYLE_IMG_W = 500
 
-CONTENT_WEIGHT = 0.1  # Alpha weight.
-STYLE_WEIGHT = 1.0  # Beta weight.
-TOTAL_WEIGHT = 1.0
+CONTENT_WEIGHT = 0.003  # Alpha weight.
+STYLE_WEIGHT = 3.0  # Beta weight.
+TOTAL_WEIGHT = .75
 
-TRANSFER_ROUNDS = 3
+TRANSFER_ROUNDS = 10
 
 # =============================<Helper Fuctions>=================================
 '''
@@ -92,7 +92,7 @@ def preprocessData(raw):
     img = img_to_array(img)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
-        img = img.reshape(ih, iw, 3)  # I think that this is right now
+        img = img.reshape(ih, iw, 3)
     img = img.astype("float64")
     img = np.expand_dims(img, axis=0)
     img = vgg19.preprocess_input(img)
@@ -166,11 +166,12 @@ def styleTransfer(cData, sData, tData):
     print("   Beginning transfer.")
     evaluator = Evaluator()
     for i in range(TRANSFER_ROUNDS):
+        index = i + 1
         print("   Step %d." % i)
-        cData, tLoss, info = fmin_l_bfgs_b(evaluator.loss, cData.flatten(), fprime=evaluator.grads, maxfun=20)
+        tData, tLoss, info = fmin_l_bfgs_b(evaluator.loss, tData.flatten(), fprime=evaluator.grads, maxfun=20)
         print("      Loss: %f." % tLoss)
-        img = deprocessImage(cData.copy())
-        saveFile = "image" + str(i) + ".jpg"
+        img = deprocessImage(tData.copy())
+        saveFile = "image" + str(index) + ".jpg"
         imageio.imwrite(saveFile, img)
         print("      Image saved to \"%s\"." % saveFile)
     print("   Transfer complete.")
